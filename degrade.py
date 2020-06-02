@@ -20,7 +20,11 @@
 ######################################################################
 ######################################################################
 #                                                                    #
-#  27/05/2019 - V0.1.0 - Commited it. (TdPA)                         #
+#  02/06/2020 - V0.0.1 - Added some more unit changes. (TdPA)        #
+#                      - Bugfix: The PSF for gauss and square for    #
+#                        the 1D filter was using the wrong center    #
+#                        variable, the input instead of the local    #
+#                        one. (TdPA)                                 #
 #                                                                    #
 #  26/04/2018 - V0.0.0 - Start code. (TdPA)                          #
 #                                                                    #
@@ -111,6 +115,26 @@ class degrade_class():
 ######################################################################
 ######################################################################
 
+    def sec2cm(self, x):
+
+        return x/self.__cm2s
+
+######################################################################
+######################################################################
+
+    def sec2Mm(self, x):
+
+        return x*1e-8/self.__cm2s
+######################################################################
+######################################################################
+
+    def sec2Mm(self, x):
+
+        return x*1e-8/self.__cm2s
+
+######################################################################
+######################################################################
+
     def sec2Mm(self, x):
 
         return x*1e-8/self.__cm2s
@@ -149,6 +173,13 @@ class degrade_class():
     def ra2sec(self, x):
 
         return x*self.__ra2deg*3600.
+
+######################################################################
+######################################################################
+
+    def ra2deg(self, x):
+
+        return x*self.__ra2deg
 
 ######################################################################
 ######################################################################
@@ -1559,14 +1590,14 @@ class degrade_class():
         # Gauss
         if tkernel == 0:
 
-            PSF = np.exp(-0.5*(axisi - center)* \
-                              (axisi - center)/ipar/ipar)
+            PSF = np.exp(-0.5*(axisi - icenter)* \
+                              (axisi - icenter)/ipar/ipar)
 
         # Square
         elif tkernel == 1:
 
             PSF = np.zeros((axisi.size))
-            PSF = np.where(np.absolute(axisi - center) <= par, \
+            PSF = np.where(np.absolute(axisi - icenter) <= par, \
                            PSF + 1.0, PSF)
 
         # Custom MTF
