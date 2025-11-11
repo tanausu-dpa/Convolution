@@ -178,7 +178,7 @@ class degrade_class():
                 # For every other distance
                 for dsj in ds[ii+1:]:
                     # If different
-                    if (dsi - dsj)/(dsi + dsj) > 1e-8:
+                    if np.absolute(dsi - dsj)/(dsi + dsj) > 1e-8:
                         # Flag not equidistant and finish
                         iequi = False
                         break
@@ -198,10 +198,10 @@ class degrade_class():
                                 endpoint=True,dtype=iaxis.dtype)
         else:
             dss = np.amin(ds)
-            NNi = int(np.ceil((axis[-1] - axis[0])/dss) + 1)
+            NNi = int(np.ceil((iaxis[-1] - iaxis[0])/dss) + 1)
             axisi = np.linspace(0,NNi-1,num=NNi, \
                                 endpoint=True,dtype=iaxis.dtype)
-            dss = (axis[-1] - axis[0])/float(NNi-1)
+            dss = (iaxis[-1] - iaxis[0])/float(NNi-1)
 
         # Domain sizes
         DD = axisi[-1] - axisi[0]
@@ -562,19 +562,19 @@ class degrade_class():
             if (not ixequi) and (not iyequi):
 
                 # Original axes
-                dims = (xaxisi*dsx, yaxisi*dsy)
+                dims = (yaxisi*dsy, xaxisi*dsx)
 
             # Only X differs
             elif not ixequi:
 
                 # Original axes
-                dims = (xaxisi*dsx, iyaxis)
+                dims = (iyaxis, xaxisi*dsx)
 
             # Only Y differs
             elif not iyequi:
 
                 # Original axes
-                dims = (ixaxis, yaxisi*dsy)
+                dims = (yaxisi*dsy, ixaxis)
 
             # Create interpolator
             r = interpolate.RegularGridInterpolator(dims, idata)
@@ -611,7 +611,7 @@ class degrade_class():
         idata = np.transpose(idata, axes=perm)
 
         # Compute collapsed shape
-        n_other = int(np.prod([idata.shape[i] for i in other_axes]))
+        n_other = int(np.prod([idata.shape[:-2]]))
 
         # Reshape to (collapsed, ny, nx)
         idata = idata.reshape((n_other, ny, nx))
@@ -646,7 +646,6 @@ class degrade_class():
             # Interpolate
             idata = self.__interpolation2D(idata,(iyaxis,ixaxis), \
                                            xx,yy)
-
 
         #
         # Check padding
@@ -725,18 +724,6 @@ class degrade_class():
                   2.*(np.arccos(uv) - uv*np.sqrt(1.-uv*uv))/ \
                   (np.pi*dsx*dsy)
 
-        # If library
-        if self.__pyfftw:
-
-            # Transform
-            idata = fftw.fft2(idata)
-
-            # Convolve
-            idata *= MTF
-
-            # Transform back
-            idata = fftw.ifft2(idata).real*dsx*dsy
-
         # Number of columns
         ncol = idata.shape[0]
 
@@ -759,29 +746,29 @@ class degrade_class():
                 fft_inverse()
 
                 # Back
-                idata[icol,:] = np.real(infftw)*dsx*dsy
+                idata[icol,:,:] = np.real(infftw)*dsx*dsy
 
             # Only numpy
             else:
 
                 # Transform
-                idata = np.fft.fft2(idata)
+                fft = np.fft.fft2(idata[icol,:,:])
 
                 # Convolve
-                idata *= MTF
+                fft *= MTF
 
                 # Transform back
-                idata = np.fft.ifft2(idata).real*dsx*dsy
+                idata[icol,:,:] = np.fft.ifft2(fft).real*dsx*dsy
 
         # If padding X
         if NXe > 0:
-            idata = idata[:,:NXe+NXi]
-            idata = idata[:,NXe:]
+            idata = idata[:,:,:NXe+NXi]
+            idata = idata[:,:,NXe:]
 
         # If padding Y
         if NYe > 0:
-            idata = idata[:NYe+NYi,:]
-            idata = idata[NYe:,:]
+            idata = idata[:,:NYe+NYi,:]
+            idata = idata[:,NYe:,:]
 
         # Interpolation
         if not ixequi or not iyequi:
@@ -793,19 +780,19 @@ class degrade_class():
             if (not ixequi) and (not iyequi):
 
                 # Original axes
-                dims = (xaxisi*dsx, yaxisi*dsy)
+                dims = (yaxisi*dsy, xaxisi*dsx)
 
             # Only X differs
             elif not ixequi:
 
                 # Original axes
-                dims = (xaxisi*dsx, iyaxis)
+                dims = (iyaxis, xaxisi*dsx)
 
             # Only Y differs
             elif not iyequi:
 
                 # Original axes
-                dims = (ixaxis, yaxisi*dsy)
+                dims = (yaxisi*dsy, ixaxis)
 
             # Interpolate
             idata = self.__interpolation2D(idata,dims,xx,yy)
@@ -816,8 +803,7 @@ class degrade_class():
 
         # New shape
         new_shape = [shape_info[0][i] for i in shape_info[2]] + \
-                    [shape_info[0][shape_info[3]], \
-                     shape_info[0][shape_info[4]]]
+                    [idata.shape[-2],idata.shape[-1]]
         idata = idata.reshape(new_shape)
 
         # Permutations
@@ -2964,7 +2950,7 @@ class degrade_class():
                 # For every other distance
                 for dsj in ds[ii+1:]:
                     # If different
-                    if (dsi - dsj)/(dsi + dsj) > 1e-8:
+                    if np.absolute(dsi - dsj)/(dsi + dsj) > 1e-8:
                         # Flag not equidistant and finish
                         iequi = False
                         break
@@ -3020,6 +3006,7 @@ class degrade_class():
         NNi = int((axis1 - axis0)/dss + 1)
         axisi = np.linspace(0,NNi-1,num=NNi, \
                             endpoint=True,dtype=iaxis.dtype)
+        dss = (axis1 - axis0)/float(NNi-1)
         axisi *= dss
         axisi += axis0
 
@@ -3049,7 +3036,7 @@ class degrade_class():
         # Need to interpolate?
         inter = axis0 != np.min(iaxis) and \
                 axis1 != np.max(iaxis) and \
-                NNi != iaxis.size:
+                NNi != iaxis.size
 
         #
         # Filter
