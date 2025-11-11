@@ -9,14 +9,18 @@
 
    Contains a class with the following methods:
 
-     -convol2D(data, xaxis=None, yaxis=None, xpar=None, \
-               ypar=None, xperiod=None, yperiod=None, \
-               xextend=None, yextend=None, xdir=None, ydir=None, \
-               kernel=None, r0=None, D=None, l0=None, \
-               xequi=None, yequi=None)
+     -convol2D(data, xdim=None, ydim=None, xaxis=None, \
+               yaxis=None, xpar=None, ypar=None, xperiod=None, \
+               yperiod=None, xextend=None, yextend=None, \
+               xdir=None, ydir=None, kernel=None, r0=None, D=None, \
+               l0=None, xequi=None, yequi=None, copy=None)
          * Convolution with a 2D kernel
 
-         o data: 2D numpy array with the data to convolve
+         o data: Array with the data to convolve
+         o xdim: Integer with the dimension of data corresponding
+                 to the X axis (if not 2D and not the second)
+         o ydim: Integer with the dimension of data corresponding
+                 to the Y axis (if not 2D and not the second)
          o xaxis: 1D numpy array with the X axis values
          o yaxis: 1D numpy array with the Y axis values
          o xpar: Characteristic parameter of convolution along the
@@ -58,6 +62,8 @@
          o yequi: True if the distance between nodes in the Y axis
                   is constant. It speeds up the convolution. If the
                   user lies, the result is wrong.
+         o copy: If must create a copy of the input data. Must be
+                 a bool. Default is no copying
 
          * Example: primary mirror degradation.
 
@@ -99,7 +105,9 @@
                adir=None, kernel=None, equi=None, kernel_file=None)
          * Convolution with a 1D kernel
 
-         o data: 1D numpy array with the data to convolve
+         o data: Numpy array with the data to convolve
+         o dim: Integer with the dimension of data to convolve
+                (if not 1D)
          o axis: 1D numpy array with the abscissa axis values
          o par: Characteristic parameter of convolution. Required for
                 gaussian (fwhm) and square (size of pulse)
@@ -125,6 +133,8 @@
                (same space than the abscissa of the data)
              $ nn double precision numbers with the PSF to
                convolve with.
+         o copy: If must create a copy of the input data. Must be
+                 a bool. Default is no copying
 
          * Example: spectral smearing
 
@@ -180,7 +190,9 @@
                kernel=None, equi=None, kernel_file=None, norm=None)
          * Integral weighted with a 1D filter
 
-         o data: 1D numpy array with the data to convolve
+         o data: Numpy array with the data to convolve
+         o dim: Integer with the dimension of data to convolve
+                (if not 1D)
          o axis: 1D numpy array with the abscissa axis values
          o par: Characteristic parameter of convolution. Required for
                 gaussian (fwhm) and square (size of pulse)
@@ -204,6 +216,8 @@
                convolve with.
          o norm: If True, normalizes the integral to the integral of
                  the filter
+         o copy: If must create a copy of the input data. Must be
+                 a bool. Default is no copying
 
          * Example: spectral filtergram custom filter
 
