@@ -20,6 +20,11 @@
 ######################################################################
 ######################################################################
 #                                                                    #
+#  23/03/2026 - V0.1.4 - Ensure that the domain is kept when         #
+#                        generating a new equidistant axis (TdPA)    #
+#                      - Added sec2km(), sec2Mm(), and Mm2cm()       #
+#                        methods (TdPA)                              #
+#                                                                    #
 #  11/11/2025 - V0.1.3 - Added the option to input more dimensions   #
 #                        than the ones to convolve (TdPA)            #
 #                      - Several improvements like using the pyfftw  #
@@ -193,15 +198,15 @@ class degrade_class():
         # If equidistant
         if iequi:
             NNi = NN
-            dss = ds[0]
             axisi = np.linspace(0,NNi-1,num=NNi, \
                                 endpoint=True,dtype=iaxis.dtype)
+            dss = (iaxis[-1] - iaxis[0])/axisi[-1]
         else:
             dss = np.amin(ds)
             NNi = int(np.ceil((iaxis[-1] - iaxis[0])/dss) + 1)
             axisi = np.linspace(0,NNi-1,num=NNi, \
                                 endpoint=True,dtype=iaxis.dtype)
-            dss = (iaxis[-1] - iaxis[0])/float(NNi-1)
+            dss = (iaxis[-1] - iaxis[0])/axisi[-1]
 
         # Domain sizes
         DD = axisi[-1] - axisi[0]
@@ -278,6 +283,22 @@ class degrade_class():
 ######################################################################
 ######################################################################
 
+    def sec2km(self, x):
+        ''' Transform argument from arcsec to kilometer
+        '''
+        return x*1e-5/self.__cm2s
+
+######################################################################
+######################################################################
+
+    def sec2Mm(self, x):
+        ''' Transform argument from arcsec to Megameter
+        '''
+        return x*1e-8/self.__cm2s
+
+######################################################################
+######################################################################
+
     def fwhm2sig(self, x):
         ''' Transform full width at half maximum to sigma in Gaussian
         '''
@@ -314,6 +335,14 @@ class degrade_class():
         ''' Transform argument from radian to seconds
         '''
         return x*self.__ra2deg*3600.
+
+######################################################################
+######################################################################
+
+    def Mm2cm(self, x):
+        ''' Transform argument from Megameter to centimeter
+        '''
+        return x*1e8
 
 ######################################################################
 ######################################################################
